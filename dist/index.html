@@ -19,35 +19,83 @@
   <script src='swagger-ui.js' type='text/javascript'></script>
   <script src='lib/highlight.7.3.pack.js' type='text/javascript'></script>
   <script src='lib/marked.js' type='text/javascript'></script>
+  <script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/hmac-sha1.js"></script>
+  <script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/components/enc-base64-min.js"></script>
 
   <script type="text/javascript">
+
+    var create_oauth_stuff = function(method, url) {
+      var consumer_key = encodeURIComponent($('#input_consumer_key')[0].value);
+      var consumer_secret = encodeURIComponent($('#input_consumer_secret')[0].value) + '&';
+
+      var timestamp = new Date().getTime();
+      var nonce = "";
+      var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      for(var i = 0; i < 10; i++) {
+          nonce += possible.charAt(Math.floor(Math.random() * possible.length));
+      }
+
+      var to_sign =
+        method + '&' +
+        encodeURIComponent(url) + '&' +
+        encodeURIComponent(
+          'oauth_consumer_key=' + consumer_key + '&' +
+          'oauth_nonce=' + nonce + '&' +
+          'oauth_signature_method=HMAC-SHA1&' +
+          'oauth_timestamp=' + timestamp + '&' +
+          'oauth_version=1.0');
+      var hash = CryptoJS.HmacSHA1(to_sign, consumer_secret);
+
+      return {
+        signature: encodeURIComponent(hash.toString(CryptoJS.enc.Base64)),
+        consumer_key: consumer_key,
+        nonce: nonce,
+        timestamp: timestamp
+      };
+    };
+
     $(function () {
       var url = window.location.search.match(/url=([^&]+)/);
       if (url && url.length > 1) {
         url = decodeURIComponent(url[1]);
       } else {
-        url = "http://petstore.swagger.io/v2/swagger.json";
+        url = "http://jobs.service.lex.consul:8008/swag/";
       }
+
+/**
+      var oauth_stuff = create_oauth_stuff('GET', url);
+      url += '?oauth_consumer_key=' + oauth_stuff.consumer_key + '&' +
+        'oauth_signature_method=HMAC-SHA1&' +
+        'oauth_signature=' + oauth_stuff.signature + '&' +
+        'oauth_timestamp=' + oauth_stuff.timestamp + '&' +
+        'oauth_nonce=' + oauth_stuff.nonce + '&oauth_version=1.0'
+        **/
+
       window.swaggerUi = new SwaggerUi({
         url: url,
         dom_id: "swagger-ui-container",
         supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
         onComplete: function(swaggerApi, swaggerUi){
-          if(typeof initOAuth == "function") {
-            /*
-            initOAuth({
-              clientId: "your-client-id",
-              realm: "your-realms",
-              appName: "your-app-name"
-            });
-            */
-          }
 
           $('pre code').each(function(i, e) {
             hljs.highlightBlock(e)
           });
 
-          addApiKeyAuthorization();
+          window.swaggerUi.api.clientAuthorizations.add("oauth1a", {
+            apply: function(obj) {
+              log(obj);
+
+              var oauth_stuff = create_oauth_stuff(obj.method, obj.url);
+
+              obj.headers.authorization = 'OAuth ' + 
+                'oauth_consumer_key="' + oauth_stuff.consumer_key + '", ' +
+                'oauth_signature_method="HMAC-SHA1", ' +
+                'oauth_signature="' + oauth_stuff.signature + '", ' +
+                'oauth_timestamp="' + oauth_stuff.timestamp + '", ' +
+                'oauth_nonce="' + oauth_stuff.nonce + '", ' +
+                'oauth_version="1.0"';
+            }
+          });
         },
         onFailure: function(data) {
           log("Unable to Load SwaggerUI");
@@ -55,24 +103,6 @@
         docExpansion: "none",
         sorter : "alpha"
       });
-
-      function addApiKeyAuthorization(){
-        var key = encodeURIComponent($('#input_apiKey')[0].value);
-        if(key && key.trim() != "") {
-            var apiKeyAuth = new SwaggerClient.ApiKeyAuthorization("api_key", key, "query");
-            window.swaggerUi.api.clientAuthorizations.add("api_key", apiKeyAuth);
-            log("added key " + key);
-        }
-      }
-
-      $('#input_apiKey').change(addApiKeyAuthorization);
-
-      // if you have an apiKey you would like to pre-populate on the page for demonstration purposes...
-      /*
-        var apiKey = "myApiKeyXXXX123456789";
-        $('#input_apiKey').val(apiKey);
-        addApiKeyAuthorization();
-      */
 
       window.swaggerUi.load();
 
@@ -91,7 +121,8 @@
     <a id="logo" href="http://swagger.io">swagger</a>
     <form id='api_selector'>
       <div class='input'><input placeholder="http://example.com/api" id="input_baseUrl" name="baseUrl" type="text"/></div>
-      <div class='input'><input placeholder="api_key" id="input_apiKey" name="apiKey" type="text"/></div>
+      <div class='input'><input placeholder="consumer key" id="input_consumer_key" name="consumerKey" type="text" value="1411336514" /></div>
+      <div class='input'><input placeholder="consumer secret" id="input_consumer_secret" name="consumerSecret" value="fKd5TZcbl3T9m0DPvwrmbYF6Bk1gZ3sqiBxgVP8CH4E=" type="password"/></div>
       <div class='input'><a id="explore" href="#">Explore</a></div>
     </form>
   </div>
