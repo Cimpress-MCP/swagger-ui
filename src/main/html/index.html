@@ -44,6 +44,7 @@
           'oauth_signature_method=HMAC-SHA1&' +
           'oauth_timestamp=' + timestamp + '&' +
           'oauth_version=1.0');
+      log("Signature base is " + to_sign);
       var hash = CryptoJS.HmacSHA1(to_sign, consumer_secret);
 
       return {
