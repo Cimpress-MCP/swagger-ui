@@ -55,7 +55,7 @@
         var query = url.substring(idx+1);
         var parts = query.split('&');
         params = params.concat(parts);
-        url = url.substring(0, url.indexOf("?"));
+        url = url.substring(0, idx);
       }
 
       params = params.sort();
