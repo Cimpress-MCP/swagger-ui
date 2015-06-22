@@ -24,6 +24,13 @@
 
   <script type="text/javascript">
 
+
+    var log = function() {
+      if ('console' in window) {
+        console.log.apply(console, arguments);
+      }
+    };
+
     var create_oauth_stuff = function(method, url) {
       var consumer_key = encodeURIComponent($('#input_consumer_key')[0].value);
       var consumer_secret = encodeURIComponent($('#input_consumer_secret')[0].value) + '&';
@@ -35,15 +42,32 @@
           nonce += possible.charAt(Math.floor(Math.random() * possible.length));
       }
 
+      var params = [
+        'oauth_consumer_key=' + consumer_key,
+        'oauth_nonce=' + nonce,
+        'oauth_signature_method=HMAC-SHA1',
+        'oauth_timestamp=' + timestamp,
+        'oauth_version=1.0'
+      ];
+
+      var idx = url.indexOf("?");
+      if (idx != -1) {
+        var query = url.substring(idx+1);
+        var parts = query.split('&');
+        params = params.concat(parts);
+        url = url.substring(0, url.indexOf("?"));
+      }
+
+      params = params.sort();
+
+      console.log(params);
+      console.log(url);
+
       var to_sign =
         method + '&' +
         encodeURIComponent(url) + '&' +
-        encodeURIComponent(
-          'oauth_consumer_key=' + consumer_key + '&' +
-          'oauth_nonce=' + nonce + '&' +
-          'oauth_signature_method=HMAC-SHA1&' +
-          'oauth_timestamp=' + timestamp + '&' +
-          'oauth_version=1.0');
+        encodeURIComponent(params.join('&'));
+      log("Signature base is " + to_sign);
       var hash = CryptoJS.HmacSHA1(to_sign, consumer_secret);
 
       return {
@@ -61,15 +85,6 @@
       } else {
         url = "http://icejob.service.lex.consul:18888/swag/";
       }
-
-/**
-      var oauth_stuff = create_oauth_stuff('GET', url);
-      url += '?oauth_consumer_key=' + oauth_stuff.consumer_key + '&' +
-        'oauth_signature_method=HMAC-SHA1&' +
-        'oauth_signature=' + oauth_stuff.signature + '&' +
-        'oauth_timestamp=' + oauth_stuff.timestamp + '&' +
-        'oauth_nonce=' + oauth_stuff.nonce + '&oauth_version=1.0'
-        **/
 
       window.swaggerUi = new SwaggerUi({
         url: url,
@@ -105,12 +120,6 @@
       });
 
       window.swaggerUi.load();
-
-      function log() {
-        if ('console' in window) {
-          console.log.apply(console, arguments);
-        }
-      }
   });
   </script>
 </head>
