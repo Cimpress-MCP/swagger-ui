@@ -100,7 +100,7 @@
             apply: function(obj) {
               log(obj);
 
-              var oauth_stuff = create_oauth_stuff(obj.method, obj.url);
+              var oauth_stuff = create_oauth_stuff(obj.method, decodeURIComponent(obj.url));
 
               obj.headers.authorization = 'OAuth ' + 
                 'oauth_consumer_key="' + oauth_stuff.consumer_key + '", ' +
