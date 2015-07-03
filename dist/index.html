@@ -31,7 +31,7 @@
       }
     };
 
-    var create_oauth_stuff = function(method, url) {
+    var create_oauth_stuff = function(obj) {
       var consumer_key = encodeURIComponent($('#input_consumer_key')[0].value);
       var consumer_secret = encodeURIComponent($('#input_consumer_secret')[0].value) + '&';
 
@@ -50,6 +50,8 @@
         'oauth_version=1.0'
       ];
 
+      // parse query parameters
+      var url = decodeURIComponent(obj.url);
       var idx = url.indexOf("?");
       if (idx != -1) {
         var query = url.substring(idx+1);
@@ -58,13 +60,18 @@
         url = url.substring(0, url.indexOf("?"));
       }
 
+      // parse POST parameters
+      if (obj.method == "POST" && obj.headers["Content-Type"] == "application/x-www-form-urlencoded") {
+        params = params.concat(obj.body.split("&"));
+      }
+
       params = params.sort();
 
       console.log(params);
       console.log(url);
 
       var to_sign =
-        method + '&' +
+        obj.method + '&' +
         encodeURIComponent(url) + '&' +
         encodeURIComponent(params.join('&'));
       log("Signature base is " + to_sign);
@@ -100,9 +107,9 @@
             apply: function(obj) {
               log(obj);
 
-              var oauth_stuff = create_oauth_stuff(obj.method, decodeURIComponent(obj.url));
+              var oauth_stuff = create_oauth_stuff(obj);
 
-              obj.headers.authorization = 'OAuth ' + 
+              obj.headers.authorization = 'OAuth ' +
                 'oauth_consumer_key="' + oauth_stuff.consumer_key + '", ' +
                 'oauth_signature_method="HMAC-SHA1", ' +
                 'oauth_signature="' + oauth_stuff.signature + '", ' +
