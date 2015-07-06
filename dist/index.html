@@ -62,7 +62,7 @@
 
       // parse POST parameters
       if (obj.method == "POST" && obj.headers["Content-Type"] == "application/x-www-form-urlencoded") {
-        params = params.concat(obj.body.split("&"));
+        params = params.concat(decodeURIComponent(obj.body).split("&"));
       }
 
       params = params.sort();
