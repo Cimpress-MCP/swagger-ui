@@ -60,8 +60,8 @@
         url = url.substring(0, url.indexOf("?"));
       }
 
-      // parse POST parameters
-      if (obj.method == "POST" && obj.headers["Content-Type"] == "application/x-www-form-urlencoded") {
+      // parse POST and PUT parameters
+      if ((obj.method == "POST" || obj.method == "PUT") && obj.headers["Content-Type"] == "application/x-www-form-urlencoded") {
         params = params.concat(decodeURIComponent(obj.body).split("&"));
       }
 
