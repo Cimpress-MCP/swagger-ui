@@ -2001,8 +2001,8 @@ SuperagentHttpClient.prototype.execute = function (obj) {
 
     if (err && obj.on && obj.on.error) {
       response.obj = err;
-      response.status = res ? res.status : 500;
-      response.statusText = res ? res.text : err.message;
+      response.status = (typeof(res) === "undefined" || typeof(res.status) === "undefined") ? 500 : res.status;
+      response.statusText = (typeof(res) === "undefined" || typeof(res.text) === "undefined") ? err.message : res.text;
       cb = obj.on.error;
     } else if (res && obj.on && obj.on.response) {
       response.obj = (typeof res.body !== 'undefined') ? res.body : res.text;
