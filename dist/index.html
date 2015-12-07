@@ -74,6 +74,15 @@
         obj.method + '&' +
         encodeURIComponent(url) + '&' +
         encodeURIComponent(params.join('&'));
+
+      // handle URL encoding of parameters that are not encoded by the encodeURIComponent
+      // method to ensure compliance with RFC 3986
+      to_sign = to_sign.replace(/\*/g, "%2A")
+                       .replace(/\!/g, "%21")
+                       .replace(/\'/g, "%27")
+                       .replace(/\(/g, "%28")
+                       .replace(/\)/g, "%29");
+
       log("Signature base is " + to_sign);
       var hash = CryptoJS.HmacSHA1(to_sign, consumer_secret);
 
